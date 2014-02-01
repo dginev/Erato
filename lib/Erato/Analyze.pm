@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+use JSON::XS qw(decode_json);
 use Net::LastFMAPI;
 use Lyrics::Fetcher;
 use Mojo::UserAgent;
@@ -36,7 +37,19 @@ sub compute_score {
   my $request_string = "http://query.yahooapis.com/v1/public/yql?q=$query\&format=json\&diagnostics=false";
   my $response = $ua->get($request_string);
   if ($response->success) {
-    print STDERR Dumper($response->res->body);  exit; return; }
+     # VERY Awkward naming scheme Yahoo!!! YUCK
+    my $json_payload = decode_json($response->res->body);  
+    my $query = $json_payload->{query} || return;
+    my $results = $query->{results} || return;
+    my $entities = $results->{entities} || return;
+    my $entity = $entities->{entity} || return;
+    if (ref $entity && ((ref $entity) eq 'ARRAY')) {
+      my @terms = @$entity;
+      # We want to SAVE the text and score (certainty) for future computations
+      # And of course return them!
+      return [@terms];
+    }
+    exit; return; }
   else {return;}
   return $lyrics;
 }
