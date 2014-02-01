@@ -14,14 +14,20 @@
 <div id="fb-root"></div>
 <script>
   window.fbAsyncInit = function() {
+  $('#message').text('Initializing Facebook connection... ');
+  $("body").css("cursor","progress");
   FB.init({
     appId      : '581889635235526',
     status     : true, // check login status
     cookie     : true, // enable cookies to allow the server to access the session
     xfbml      : true,  // parse XFBML
   });
-  FB.login(function(){}, {scope: 'user_likes'});
-
+  $("body").css("cursor","auto");
+  FB.login(function(){
+    $('#message').text('Logging in Facebook... ');
+    $("body").css("cursor","progress");},
+   {scope: 'user_likes'});
+  $("body").css("cursor","auto");
   // Here we subscribe to the auth.authResponseChange JavaScript event. This event is fired
   // for any authentication related change, such as login, logout or session refresh. This means that
   // whenever someone who was previously logged out tries to log in again, the correct case below 
@@ -65,8 +71,12 @@
   // Here we run a very simple test of the Graph API after login is successful. 
   // This testAPI() function is only called in those cases. 
   function retrieveMusic() {
-    console.log('Welcome!  Fetching your information.... ');
+    $('#message').text('Welcome!  Fetching your information.... ');
+    $("body").css("cursor","progress");
+
     FB.api('/me/music', function(response) {
+      $("body").css("cursor","auto");
+      $("#message").text("Music favourites loaded!");
       var names = response.data.map(function(like){return like.name});
       console.log(JSON.stringify(names));
       var name_table = "<table>" + names.map(function(name){return '<tr><td>'+name+'</td></tr>';}).join("\n") + '</table>';
@@ -75,7 +85,8 @@
   };
 </script>
 
-<div class="centered"><div class="focus"><img height="150px" src="img/Erato-wikipedia.jpg"></div><br><br><br>
+<div class="centered"><div><p id="message"></p></div><br/>
+<div class="focus"><img height="150px" src="img/Erato-wikipedia.jpg"></div><br><br><br>
 <div class="fb-login-button" data-max-rows="1" data-size="xlarge" data-show-faces="false" data-auto-logout-link="true"></div></div>
 </body>
 </html>
