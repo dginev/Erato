@@ -22,3 +22,7 @@ Action Plan
 
 6. Display score and plot the amplitude progression
 7. (Maybe) Suggestions: Higher rated/lower rated songs. (expand horizons / indulge in similarity)
+
+Notes:
+====
+  * 20:30 to 21:01 - found and patched a bug with Lyrics::Fetcher::AZLyrics, should remind myself to file a GitHub patch!
