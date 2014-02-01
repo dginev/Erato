@@ -1,12 +1,17 @@
 package Erato;
+use strict;
+use warnings;
+
 use Mojo::Base 'Mojolicious';
-use Erato::Analyze qw(analyze_artist);
+use Erato::Analyze qw(get_top_tracks compute_score);
 use File::Basename 'dirname';
 use File::Spec::Functions qw(catdir catfile);
 
 # This method will run once at server start
 sub startup {
   my $app = shift;
+  # Listen at the hot deployment port
+  $app->config(hypnotoad => {listen => ['http://*:3000']});
   # Switch to installable home directory
   $app->home->parse(catdir(dirname(__FILE__), 'Erato'));
   # Switch to installable "public" directory
@@ -26,15 +31,39 @@ sub startup {
 
   $r->post('/analyze' => sub {
     my $self = shift;
+    $self->render_later;
     my $post_params = $self->req->body_params->params || [];
     my %parameters;
     while (my ($key,$value) = splice(@$post_params,0,2)) {
       $parameters{$key} //= [];
       push $parameters{$key},$value; }
+    # We can begin building our report
+    # Since we're doing a whole bunch of authors and songs, let's go async using the Mojolicious event loop magic:
+    my $delay = Mojo::IOLoop->delay(sub{
+      my $delay = shift;
+      $self->render_dumper(@_);
+    });
 
-    my $report = map {analyze_artist($_)} @{$parameters{'names[]'}};
-    $self->render(json => $report);
+    $self->analyze_artist($_ => $delay->begin) for @{$parameters{'names[]'}||[]};
+  });
+
+  use Data::Dumper;
+  $app->helper(analyze_artist => sub {
+    my ($self,$artist) = @_;
+    my $songs = get_top_tracks($artist);
+    # Ok, now that we have the tracks, we need to analyze each piece individually and then aggregate them together.
+    # Hence, let's use a nested event loop:
+    my $delay = Mojo::IOLoop->delay(sub{
+      my $delay = shift;
+      print STDERR Dumper(\@_);
+      exit;
+    });
+    # Async processing for each <artist,song> tuple:
+    for my $song(@$songs) {
+      compute_score($artist, $song, $delay->begin); }
+    return;
   });
 }
+
 
 1;
