@@ -9,7 +9,6 @@ sub startup {
   my $app = shift;
   # Switch to installable home directory
   $app->home->parse(catdir(dirname(__FILE__), 'Erato'));
-  print STDERR "HOME: ",$app->home,"\n\n";
   # Switch to installable "public" directory
   $app->static->paths->[0] = $app->home->rel_dir('public');
   # Switch to installable "templates" directory
@@ -28,7 +27,12 @@ sub startup {
   $r->post('/analyze' => sub {
     my $self = shift;
     my $post_params = $self->req->body_params->params || [];
-    my $report = map {analyze_artist($_)} @$post_params;
+    my %parameters;
+    while (my ($key,$value) = splice(@$post_params,0,2)) {
+      $parameters{$key} //= [];
+      push $parameters{$key},$value; }
+
+    my $report = map {analyze_artist($_)} @{$parameters{'names[]'}};
     $self->render(json => $report);
   });
 }

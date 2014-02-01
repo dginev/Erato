@@ -78,13 +78,13 @@
       $("body").css("cursor","auto");
       $("#message").text("Music favourites loaded!");
       var names = response.data.map(function(like){return like.name});
-      console.log(JSON.stringify(names));
       var name_table = "<table>" + names.map(function(name){return '<tr><td>'+name+'</td></tr>';}).join("\n") + '</table>';
       $('div.focus').html(name_table);
 
       $("#message").text("Retrieving artist scores/facts...");
       $("body").css("cursor","progress");
-      $.post("/analyze", names,function(response) {
+      console.log(JSON.stringify(names));
+      $.post("/analyze", {'names[]'  : names}, function(response) {
         console.log(JSON.stringify(response));
         $("#message").text("Analysis complete!");
         $("body").css("cursor","auto");
