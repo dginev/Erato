@@ -2,9 +2,11 @@ package Erato::Analyze;
 
 use strict;
 use warnings;
+use Data::Dumper;
+
 use Net::LastFMAPI;
 use Lyrics::Fetcher;
-use Data::Dumper;
+use Mojo::UserAgent;
 
 use base qw(Exporter);
 our @EXPORT_OK = qw(get_top_tracks compute_score);
@@ -23,13 +25,19 @@ sub get_top_tracks {
 
 sub compute_score {
   my ($artist,$song) = @_;
-  print STDERR "\n Received tuple: <'$artist','$song'>\n";
-  my $lyrics = Lyrics::Fetcher->fetch($artist,$song,'LyricWiki') ||
-               Lyrics::Fetcher->fetch($artist,$song,'AZLyrics') ||
-               Lyrics::Fetcher->fetch($artist,$song,'LyrDB') ||
-               Lyrics::Fetcher->fetch($artist,$song,'AstraWeb');
-  print STDERR $lyrics||'Not found!',"\n\n";
-  exit;
+  my $lyrics = Lyrics::Fetcher->fetch($artist,$song,'AZLyrics') ||
+               Lyrics::Fetcher->fetch($artist,$song,'LyricWiki');
+  return unless length($lyrics);
+  # We got the lyrics, now ask Yahoo's API about terms:
+  my $ua = Mojo::UserAgent->new;
+  $ua->max_redirects(2)->connect_timeout(10)->request_timeout(20);
+  $lyrics=~s/[\[\]\'\/]/ /g; # Some non-word characters can be discarded
+  my $query = "select * from contentanalysis.analyze where text='".$lyrics."';";
+  my $request_string = "http://query.yahooapis.com/v1/public/yql?q=$query\&format=json\&diagnostics=false";
+  my $response = $ua->get($request_string);
+  if ($response->success) {
+    print STDERR Dumper($response->res->body);  exit; return; }
+  else {return;}
   return $lyrics;
 }
 
