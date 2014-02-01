@@ -14,14 +14,16 @@ Action Plan
   query.yahooapis.com/v1/public/yql?q=select * from contentanalysis.analyze where text='Maybe if I write enough, I will hear about an Italian sculptor.'&format=json&diagnostics=false
   ```
 
-4. WordNet - rank word frequency of the terms ???
- * (Maybe) Score = (#terms / text size) * confidence * #rare words. ???
- * Possibly use some of the publicly available word frequency lists, e.g. http://invokeit.wordpress.com/frequency-word-lists/
-5. Score = (#terms / text size) * likelihoods ???
+4. Use some of the publicly available word frequency lists, e.g. http://invokeit.wordpress.com/frequency-word-lists/
+5. Score = <hipsterness, literacy, coolness, terms>
+  * rare words / all words = hipsterness
+  * unique words / all words = literacy
+  * trending words / all words = coolness
+  * terms are like icing on the cake (?)
  (logarithmic computations will definitely work best)
 
-6. Display score and plot the amplitude progression
-7. (Maybe) Suggestions: Higher rated/lower rated songs. (expand horizons / indulge in similarity)
+6. Display score and plot the amplitude progression between songs/artists?
+7. (Maybe) Suggestions to the user: Higher rated/lower rated songs. (expand horizons / indulge in similarity)
 
 Notes:
 ====
