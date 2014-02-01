@@ -1,6 +1,7 @@
 Erato is the ancient greek muse of love and poetry.
 
-=== Action Plan:
+Action Plan
+====
 
 0. Empty page with Facebook login button -> upon login:
 1. Facebook API - obtain top 10 artists of user
