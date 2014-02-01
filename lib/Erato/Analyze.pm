@@ -28,21 +28,25 @@ sub get_top_tracks {
 
 sub compute_score {
   my ($artist,$song) = @_;
+  print STDERR "<$artist,$song>\n";
   my $lyrics = Lyrics::Fetcher->fetch($artist,$song,'AZLyrics') ||
                Lyrics::Fetcher->fetch($artist,$song,'LyricWiki');
   return unless length($lyrics);
   # We got the lyrics compute the scores:
+  my $scores={};
   my @all_words = grep {length($_)>1} split(/\W+/,$lyrics); # This is very basic tokenization here, throw away single-letter words
   my $all_count = scalar(@all_words);
+  # Literacy - unique words ratio
   my @unique_words = uniq(@all_words);
   my $literacy_score = scalar(@unique_words) / $all_count;
-  print STDERR "\n\n",$literacy_score,"\n\n"; exit;
-  # my @hipster_words
-
-  my $scores={};
-  my $cool_score ;
-  my $hipster_score;
-  $scores = {coolness=>$cool_score,hipsterness=>$hipster_score,literacy=>$literacy_score};
+  # Hipsterness - rare words ratio
+  my @hipster_words = grep {($Erato::WordFrequency::List->{$_}||0) < $Erato::WordFrequency::hipsterness_cutoff} @all_words;
+  my $hipsterness_score =  scalar(@hipster_words) / $all_count;
+  # Coolness - trending words ratio
+  # TODO: Maybe later, too hard to do right for now
+  # my $cool_score ;
+  
+  $scores = {song=>$song,artist=>$artist,hipsterness=>$hipsterness_score,literacy=>$literacy_score}; # coolness=>$cool_score,
   # Now ask Yahoo's API about terms:
   my $ua = Mojo::UserAgent->new;
   $ua->max_redirects(2)->connect_timeout(10)->request_timeout(20);
@@ -62,10 +66,10 @@ sub compute_score {
       # We want to SAVE the text and score (certainty) for future computations
       # And of course return them!
       $scores->{terms}=\@terms;
+      return $scores; }
     }
-    exit; return $scores; }
   else {return $scores;}
-  return $lyrics;
+  return $scores;
 }
 
 1;

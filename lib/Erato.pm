@@ -31,7 +31,6 @@ sub startup {
 
   $r->post('/analyze' => sub {
     my $self = shift;
-    $self->render_later;
     my $post_params = $self->req->body_params->params || [];
     my %parameters;
     while (my ($key,$value) = splice(@$post_params,0,2)) {
@@ -39,12 +38,13 @@ sub startup {
       push $parameters{$key},$value; }
     # We can begin building our report
     # Since we're doing a whole bunch of authors and songs, let's go async using the Mojolicious event loop magic:
-    my $delay = Mojo::IOLoop->delay(sub{
-      my $delay = shift;
-      $self->render_dumper(@_);
-    });
-
-    $self->analyze_artist($_ => $delay->begin) for @{$parameters{'names[]'}||[]};
+    # my $delay = Mojo::IOLoop->delay(sub{
+    #   my $delay = shift;
+    #   $self->render_dumper(@_);
+    # });
+    # $self->analyze_artist($_ => $delay->begin) for @{$parameters{'names[]'}||[]};
+    $self->analyze_artist(@{$parameters{name}}) if ref $parameters{name};
+    $self->render(json=>"OK");
   });
 
   use Data::Dumper;
