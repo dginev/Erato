@@ -43,8 +43,8 @@ sub startup {
     #   $self->render_dumper(@_);
     # });
     # $self->analyze_artist($_ => $delay->begin) for @{$parameters{'names[]'}||[]};
-    $self->analyze_artist(@{$parameters{name}}) if ref $parameters{name};
-    $self->render(json=>"OK");
+    my $score = $self->analyze_artist(@{$parameters{name}}) if ref $parameters{name};
+    $self->render(json=>$score||{});
   });
 
   use Data::Dumper;
@@ -53,15 +53,14 @@ sub startup {
     my $songs = get_top_tracks($artist);
     # Ok, now that we have the tracks, we need to analyze each piece individually and then aggregate them together.
     # Hence, let's use a nested event loop:
-    my $delay = Mojo::IOLoop->delay(sub{
-      my $delay = shift;
-      print STDERR Dumper(\@_);
-      exit;
-    });
     # Async processing for each <artist,song> tuple:
+    my @scores;
     for my $song(@$songs) {
-      compute_score($artist, $song, $delay->begin); }
-    return;
+      push @scores, compute_score($artist, $song);
+      last;} # Only one for testing }
+
+    print STDERR Dumper(\@scores);   
+    return \@scores;
   });
 }
 

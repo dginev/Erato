@@ -7,6 +7,16 @@
   margin-left: auto;
   margin-right: auto;
 }
+.report tr {text-align: left;}
+.report td.loading {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 8px solid #fff;
+  border-right-color: transparent;
+  border-radius: 50%;
+  box-shadow: 0 0 25px 2px #eee;
+}
 </style>
 <script src="js/external/jquery.min.js"></script>
 </head>
@@ -78,7 +88,7 @@
       $("body").css("cursor","auto");
       $("#message").text("Music favourites loaded!");
       var names = response.data.map(function(like){return like.name});
-      var name_table = "<table>" + names.map(function(name){return '<tr><td>'+name+'</td></tr>';}).join("\n") + '</table>';
+      var name_table = "<table class='report'><th>Aritst</th><th>Score</th>" + names.sort().map(function(name){return '<tr><td>'+name+'</td><td class="loading"></td></tr>';}).join("\n") + '</table>';
       $('div.focus').html(name_table);
 
       $("#message").text("Retrieving artist scores/facts...");

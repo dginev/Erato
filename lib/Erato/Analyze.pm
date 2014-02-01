@@ -23,14 +23,15 @@ sub get_top_tracks {
   my ($artist) = @_;
   # Grab all songs of this artist via LastFM's API:
   my $top_tracks = lastfm("artist.getTopTracks", artist => $artist);
+  return unless ref $top_tracks;
   my @top_track_names = map {$_->{name}} @{$top_tracks->{toptracks}->{track}};
   return \@top_track_names; }
 
 sub compute_score {
   my ($artist,$song) = @_;
   print STDERR "<$artist,$song>\n";
-  my $lyrics = Lyrics::Fetcher->fetch($artist,$song,'AZLyrics') ||
-               Lyrics::Fetcher->fetch($artist,$song,'LyricWiki');
+  my $lyrics = Lyrics::Fetcher->fetch($artist,$song,'LyricWiki') ||
+               Lyrics::Fetcher->fetch($artist,$song,'AZLyrics');
   return unless length($lyrics);
   # We got the lyrics compute the scores:
   my $scores={};
@@ -57,6 +58,7 @@ sub compute_score {
   if ($response->success) {
      # VERY Awkward naming scheme Yahoo!!! YUCK
     my $json_payload = decode_json($response->res->body);  
+    print STDERR Dumper($json_payload);
     my $query = $json_payload->{query} || return $scores;
     my $results = $query->{results} || return $scores;
     my $entities = $results->{entities} || return $scores;
@@ -65,10 +67,11 @@ sub compute_score {
       my @terms = @$entity;
       # We want to SAVE the text and score (certainty) for future computations
       # And of course return them!
-      $scores->{terms}=\@terms;
-      return $scores; }
-    }
-  else {return $scores;}
+      $scores->{terms}=\@terms; }
+    elsif (ref $entity && (ref $entity eq 'HASH')) {
+      my @terms = $entity;      
+      @terms = map { {term=>$_->{text}->{content}, score=>$_->{score}} } @terms;
+      $scores->{terms}=\@terms; } }
   return $scores;
 }
 
