@@ -127,7 +127,6 @@ div.rounded {
           // We need to intersect each of our user's artists with this friends and bump the counter for the intersection:
           $.each(artists,function(aindex,artist) {
             if (artist in name_popularity) {
-              console.log(artist);
               name_popularity[artist]++; } });
         }});
         for ( key_name in name_popularity) {
@@ -135,7 +134,6 @@ div.rounded {
           // If we are late to the party, set the values from here:
           var bar_td = $('tr td:contains("'+key_name+'")').next();
           bar_td.find('div.progress-bar-info').attr('style','width:'+(name_popularity[key_name]*100)+'%;');
-          console.log(bar_td.html());
         }
         return name_popularity;
       });
@@ -144,7 +142,6 @@ div.rounded {
 
   function retrieveScores(names,name_popularity) {
     $("#message").text("Retrieving artist scores/facts...");
-    console.log("Received: "+JSON.stringify(name_popularity));
     var td = [];
     var async_lookup = [];
     jQuery.each(names, function(index, name) {
