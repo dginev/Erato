@@ -1,0 +1,2 @@
+#!/bin/sh
+./script/erato.pl daemon -l http://*:$PORT -m production
