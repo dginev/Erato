@@ -1,25 +1,30 @@
 <html>
 <head>
-  <style>
+<!-- Bootstrap -->
+<link href="css/bootstrap.min.css" rel="stylesheet">
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+  <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+<style>
 .centered {
   display: block;
-  width: 150px;
+  width: 350px;
   margin-left: auto;
   margin-right: auto;
 }
-.report tr {text-align: left;}
-.report td.loading {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  border: 8px solid #fff;
-  border-right-color: transparent;
-  border-radius: 50%;
-  box-shadow: 0 0 25px 2px #eee;
-}
+.report tr {height: 20px; text-align: left;}
+.report th {height: 20px; text-align: left;}
+.loading {
+  background:url('img/load.gif') no-repeat center;}
 </style>
-<script src="js/external/jquery.min.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
 </head>
+
 <body>
 <div id="fb-root"></div>
 <script>
@@ -88,26 +93,36 @@
       $("body").css("cursor","auto");
       $("#message").text("Music favourites loaded!");
       var names = response.data.map(function(like){return like.name});
-      var name_table = "<table class='report'><th>Aritst</th><th>Score</th>" + names.sort().map(function(name){return '<tr><td>'+name+'</td><td class="loading"></td></tr>';}).join("\n") + '</table>';
+      names = names.sort();
+      var name_table = "<table class='table table-striped'><thead><th>Aritst</th><th>Score</th></thead><tbody>"
+       + names.map(function(name){return '<tr><td>'+name+'</td><td></td></tr>';}).join("\n") + '</tbody></table>';
       $('div.focus').html(name_table);
+      $('table tr:gt(1) :nth-child(2)').addClass('loading').animate();
 
-      $("#message").text("Retrieving artist scores/facts...");
-      $("body").css("cursor","progress");
-      console.log(JSON.stringify(names));
-      for (index in names) {
-        $.post("/analyze", {'name'  : names[index]}, function(response) {
-          console.log(JSON.stringify(response));
-          $("#message").text("Analysis complete!");
-          $("body").css("cursor","auto");
-        },"json");
-      }
+      retrieveScores(names);
       
     });
   };
+
+  function retrieveScores(names) {
+    $("#message").text("Retrieving artist scores/facts...");
+    var td = [];
+    jQuery.each(names, function(index, name) {
+      var results_index = index;
+      td[results_index] = $('table tr:nth-child('+results_index+') td:nth-child(2)');
+      $.post("/analyze", {'name'  : name}, function(response) {
+        td[results_index].removeClass('loading');
+        td[results_index].text(JSON.stringify(response));
+      },"json");
+    });
+  }
 </script>
 
-<div class="centered"><div><p id="message"></p></div><br/>
-<div class="focus"><img height="150px" src="img/Erato-wikipedia.jpg"></div><br><br><br>
-<div class="fb-login-button" data-max-rows="1" data-size="xlarge" data-show-faces="false" data-auto-logout-link="true"></div></div>
+<div class="row">
+        <div class="col-md-2"><p id="message"></p></div>
+        <div class="col-md-7"><div class="focus"><img height="150px" src="img/Erato-wikipedia.jpg"></div></div>
+        <div class="col-md-3"><div class="fb-login-button" data-max-rows="1" data-size="xlarge" data-show-faces="false" data-auto-logout-link="true"></div></div>
+</div>
+
 </body>
 </html>
