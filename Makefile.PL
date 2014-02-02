@@ -7,6 +7,7 @@ VERSION=>'0.1',
 PREREQ_PM => {
   'Mojolicious' => '4.6',
   'DBI' => 0,
+  'DBD::SQLite'=>0,
   'JSON::XS'=>0,
   'List::MoreUtils'=>0,
   'Lyrics::Fetcher::LyricWiki'=>0,
