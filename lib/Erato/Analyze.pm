@@ -65,13 +65,14 @@ sub compute_score {
     my $entity = $entities->{entity} || return $scores;
     if (ref $entity && ((ref $entity) eq 'ARRAY')) {
       my @terms = @$entity;
-      # We want to SAVE the text and score (certainty) for future computations
-      # And of course return them!
+      @terms = map { {term=>$_->{text}->{content}, score=>$_->{score}} } @terms;
       $scores->{terms}=\@terms; }
     elsif (ref $entity && (ref $entity eq 'HASH')) {
       my @terms = $entity;      
       @terms = map { {term=>$_->{text}->{content}, score=>$_->{score}} } @terms;
       $scores->{terms}=\@terms; } }
+  #TODO: We want to SAVE the text and score (certainty) for future computations
+  # And of course return them!
   return $scores;
 }
 

@@ -57,9 +57,8 @@ sub startup {
     my @scores;
     for my $song(@$songs) {
       push @scores, compute_score($artist, $song);
-      last;} # Only one for testing }
+    } # Only one for testing }
 
-    print STDERR Dumper(\@scores);   
     return \@scores;
   });
 }
