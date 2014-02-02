@@ -122,9 +122,12 @@ tr.subrow {
           var trendy_ratio = 0;
           jQuery.each(response, function(songindex, score) {
             var subrow = {};
+            if (! score.song) {return false;} // Skip empty scores (garbage?)
             subrow.title = score.song;
             if (score.terms && (score.terms.length > 0)) {
-              subrow.terms = score.terms.map(function(t){return t.term;}).join('<span style="color: red">; </span>');  }
+              subrow.terms = score.terms.join('<span style="color: red">; </span>');  }
+            else {
+              subrow.terms = '';  }
             subtable.push(subrow);
             hip_ratio += score.hipsterness;
             literate_ratio += score.literacy;

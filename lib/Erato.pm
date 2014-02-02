@@ -4,6 +4,7 @@ use warnings;
 
 use Mojo::Base 'Mojolicious';
 use Erato::Analyze qw(get_top_tracks compute_score);
+use Erato::Backend;
 use File::Basename 'dirname';
 use File::Spec::Functions qw(catdir catfile);
 
@@ -20,7 +21,7 @@ sub startup {
   $app->renderer->paths->[0] = $app->home->rel_dir('templates');
 
   $ENV{MOJO_REQUEST_TIMEOUT} = 600;# 10 minutes;
-  $ENV{MOJO_CONNECT_TIMEOUT} = 120; # 2 minutes
+  $ENV{MOJO_CONNECT_TIMEOUT} = 600; # 10 minutes
   $ENV{MOJO_INACTIVITY_TIMEOUT} = 600; # 10 minutes;
 
   my $r = $app->routes;
@@ -44,21 +45,29 @@ sub startup {
     # });
     # $self->analyze_artist($_ => $delay->begin) for @{$parameters{'names[]'}||[]};
     my $score = $self->analyze_artist(@{$parameters{name}}) if ref $parameters{name};
-    $self->render(json=>$score||{});
+    $self->render(json=>$score);
   });
 
-  use Data::Dumper;
   $app->helper(analyze_artist => sub {
     my ($self,$artist) = @_;
     my $songs = get_top_tracks($artist);
+    my $backend = Erato::Backend->new();
     # Ok, now that we have the tracks, we need to analyze each piece individually and then aggregate them together.
     # Hence, let's use a nested event loop:
     # Async processing for each <artist,song> tuple:
     my @scores;
+    my $limit = 10; # Top 10 only
     for my $song(@$songs) {
-      push @scores, compute_score($artist, $song);
-    } # Only one for testing }
+      my $score = $backend->fetch_score($artist, $song);
+      if (! ref $score) {
+        $score = compute_score($artist, $song);
+        $backend->save_score($score) if ref $score; }
 
+      # We want to return an array of terms, if applicable
+      if ($score->{terms}) {
+        $score->{terms} = [split(',,',$score->{terms})]; }
+      push @scores, $score if ref $score;
+      last unless --$limit; }
     return \@scores;
   });
 }

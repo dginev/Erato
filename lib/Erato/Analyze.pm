@@ -30,7 +30,7 @@ sub get_top_tracks {
 
 sub compute_score {
   my ($artist,$song) = @_;
-  print STDERR "<$artist,$song>\n";
+  $artist =~ s/Official Fan Page$//;
   my $lyrics = Lyrics::Fetcher->fetch($artist,$song,'LyricWiki') ||
                Lyrics::Fetcher->fetch($artist,$song,'AZLyrics');
   return unless length($lyrics);
@@ -65,12 +65,16 @@ sub compute_score {
     my $entity = $entities->{entity} || return $scores;
     if (ref $entity && ((ref $entity) eq 'ARRAY')) {
       my @terms = @$entity;
-      @terms = map { {term=>$_->{text}->{content}, score=>$_->{score}} } @terms;
-      $scores->{terms}=\@terms; }
+      # @terms = map { {term=>$_->{text}->{content}, score=>$_->{score}} } @terms;
+      # TODO: For now, ease storage and lookup by just recording the terms as a ,, separated
+      # $scores->{terms}=\@terms; }
+      $scores->{terms}=join(",,",(map {$_->{text}->{content}} @terms)); }
     elsif (ref $entity && (ref $entity eq 'HASH')) {
       my @terms = $entity;      
-      @terms = map { {term=>$_->{text}->{content}, score=>$_->{score}} } @terms;
-      $scores->{terms}=\@terms; } }
+      #@terms = map { {term=>$_->{text}->{content}, score=>$_->{score}} } @terms;
+      # TODO: For now, ease storage and lookup by just recording the terms as a ,, separated
+      #$scores->{terms}=$terms; } }
+      $scores->{terms}=join(",,",(map {$_->{text}->{content}} @terms)); } }
   #TODO: We want to SAVE the text and score (certainty) for future computations
   # And of course return them!
   return $scores;
