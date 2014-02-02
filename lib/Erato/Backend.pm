@@ -40,7 +40,7 @@ sub reset_db {
   $dbh->do("CREATE TABLE scores (
     songid integer primary key AUTOINCREMENT,
     artist varchar(500) NOT NULL,
-    song  varchar(500),
+    song  varchar(500) NOT NULL,
     hipsterness REAL,
     literacy REAL,
     terms varchar(5000)
