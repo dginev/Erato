@@ -7,12 +7,13 @@ use Erato::Analyze qw(get_top_tracks compute_score);
 use Erato::Backend;
 use File::Basename 'dirname';
 use File::Spec::Functions qw(catdir catfile);
+use Data::Dumper;
 
 # This method will run once at server start
 sub startup {
   my $app = shift;
   # Listen at the hot deployment port
-  $app->config(hypnotoad => {listen => ['http://*:3000']});
+  $app->config(hypnotoad => {listen => ['http://*:3000'], clients=>15});
   # Switch to installable home directory
   $app->home->parse(catdir(dirname(__FILE__), 'Erato'));
   # Switch to installable "public" directory
@@ -61,7 +62,8 @@ sub startup {
       my $score = $backend->fetch_score($artist, $song);
       if (! ref $score) {
         $score = compute_score($artist, $song);
-        $backend->save_score($score) if ref $score; }
+        if (! ref $score) {$score={artist=>$artist,song=>$song}}
+        $backend->save_score($score); }
 
       # We want to return an array of terms, if applicable
       if ($score->{terms}) {
