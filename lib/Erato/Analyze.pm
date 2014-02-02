@@ -59,7 +59,6 @@ sub compute_score {
   if ($response->success) {
      # VERY Awkward naming scheme Yahoo!!! YUCK
     my $json_payload = decode_json($response->res->body);  
-    print STDERR Dumper($json_payload);
     my $query = $json_payload->{query} || return $scores;
     my $results = $query->{results} || return $scores;
     my $entities = $results->{entities} || return $scores;

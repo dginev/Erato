@@ -97,7 +97,7 @@
       var name_table = "<table class='table table-striped'><thead><th>Aritst</th><th>Score</th></thead><tbody>"
        + names.map(function(name){return '<tr><td>'+name+'</td><td></td></tr>';}).join("\n") + '</tbody></table>';
       $('div.focus').html(name_table);
-      $('table tr:gt(1) :nth-child(2)').addClass('loading').animate();
+      $('table tr :nth-child(2)').addClass('loading').animate();
 
       retrieveScores(names);
       
@@ -107,12 +107,33 @@
   function retrieveScores(names) {
     $("#message").text("Retrieving artist scores/facts...");
     var td = [];
+    var async_lookup = [];
     jQuery.each(names, function(index, name) {
-      var results_index = index;
-      td[results_index] = $('table tr:nth-child('+results_index+') td:nth-child(2)');
+      async_lookup[name] = index;
+      td[async_lookup[name]] = $('table tr:nth-child('+(async_lookup[name]+1)+') td:nth-child(2)');
       $.post("/analyze", {'name'  : name}, function(response) {
-        td[results_index].removeClass('loading');
-        td[results_index].text(JSON.stringify(response));
+        td[async_lookup[name]].removeClass('loading');
+        if (response.length > 0) {
+          var hip_ratio = 0;
+          var literate_ratio = 0;
+          var trendy_ratio = 0;
+          var titles = [];
+          jQuery.each(response, function(songindex, score) {
+            titles.push(score.song);
+            hip_ratio += score.hipsterness;
+            literate_ratio += score.literacy;
+          });
+          hip_ratio /= response.length; // arithmetic mean
+          literate_ratio /= response.length;// arithmetic mean
+          hip_ratio = 1 - hip_ratio; // Darker is better
+          literate_ratio = 1 - literate_ratio; // Darker is better
+          hip_ratio *= 100; // switch to percentage
+          literate_ratio *= 100; // switch to percentage
+          var hip = '<span style="color: hsl(0,100%,'+hip_ratio+'%);">Hip<span>';
+          var literate = '<span style="color: hsl(120,100%,'+literate_ratio+'%);">Literate<span>';
+          //var trendy = '<span style="color: hsl(190,100%,'+trendy_ratio+'%);">Trendy<span>';
+          td[async_lookup[name]].html(hip+', '+literate+' '+titles.join(", "));//', '+trendy+
+        }
       },"json");
     });
   }
