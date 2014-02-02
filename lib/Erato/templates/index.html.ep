@@ -39,7 +39,7 @@ div.rounded {
   FB.login(function(){
     $('#message').text('Logging in Facebook... ');
     $("body").css("cursor","progress");},
-   {scope: 'user_likes'});
+   {scope: 'user_likes,friends_likes'});
   $("body").css("cursor","auto");
   // Here we subscribe to the auth.authResponseChange JavaScript event. This event is fired
   // for any authentication related change, such as login, logout or session refresh. This means that
@@ -60,14 +60,14 @@ div.rounded {
       // (1) JavaScript created popup windows are blocked by most browsers unless they 
       // result from direct interaction from people using the app (such as a mouse click)
       // (2) it is a bad experience to be continually prompted to login upon page load.
-      FB.login(function(){}, {scope: 'user_likes'});
+      FB.login(function(){}, {scope: 'user_likes,friends_likes'});
     } else {
       // In this case, the person is not logged into Facebook, so we call the login() 
       // function to prompt them to do so. Note that at this stage there is no indication
       // of whether they are logged into the app. If they aren't then they'll see the Login
       // dialog right after they log in to Facebook. 
       // The same caveats as above apply to the FB.login() call here.
-      FB.login(function(){}, {scope: 'user_likes'});
+      FB.login(function(){}, {scope: 'user_likes,friends_likes'});
     }
   });
   };
@@ -94,18 +94,47 @@ div.rounded {
       var names = response.data.map(function(like){return like.name});
       names = names.sort();
       var name_table = "<table class='table table-striped'><thead><th>Aritst</th>"+
-        "<th><span style='color: green;'>Literate</span>/<span style='color: orange;'>Hipster</span><span style='text-align: right; float: right;'>Catchphrases</span></th></thead><tbody>" +
+        "<th><span style='color: green;'>Literate</span>/<span style='color: orange;'>Hipster</span>/<span style='color: lightblue;'>Friendly</span><span style='text-align: right; float: right;'>Catchphrases</span></th></thead><tbody>" +
         names.map(function(name){return '<tr><td>'+name+'</td><td></td></tr>';}).join("\n") + '</tbody></table>';
       $('div.focus').html(name_table);
       $('tr').each(function(trid) {$(this).attr('id',trid);});
       $("#message").addClass('loading');
       reaper = 0;
       $("body").css("cursor","progress");
-      retrieveScores(names);
+      retrieveScores(names,retrieveFriendOverlap(names));
     });
   };
-  function retrieveScores(names) {
+
+  function retrieveFriendOverlap(names) {
+    var name_popularity = {};
+    $.each(names, function(index, name) { name_popularity[name]=0; });
+    FB.api("me/friends",{
+      fields:'id',
+      limit:200
+    },function(res){
+      var l='';
+      var friend_count = res.data.length || 1;
+      $.each(res.data,function(idx,val){
+         l=l+val.id+(idx<res.data.length-1?',':'')
+      });
+      FB.api("music?ids="+l,function(res){
+        $.each(res,function(index,friend){
+        if (friend.data) {
+          var artists = friend.data.map(function(like){return like.name})
+          // We need to intersect each of our user's artists with this friends and bump the counter for the intersection:
+          $.each(artists,function(aindex,artist) {
+            if (artist in name_popularity) {
+              name_popularity[artist]++; } });
+        }});
+        for ( key_name in name_popularity) {
+          name_popularity[key_name] /= friend_count;  }
+      });
+    });
+    return name_popularity;  }
+
+  function retrieveScores(names,name_popularity) {
     $("#message").text("Retrieving artist scores/facts...");
+    console.log(name_popularity);
     var td = [];
     var async_lookup = [];
     jQuery.each(names, function(index, name) {
@@ -120,7 +149,6 @@ div.rounded {
           $("body").css("cursor","auto"); }
         if (response.length > 0) {
           var score_count = 0;
-          console.log(JSON.stringify(response));
           var hip_ratio = 0;
           var literate_ratio = 0;
           var trendy_ratio = 0;
@@ -149,9 +177,13 @@ div.rounded {
           literate_ratio /= score_count;// arithmetic mean
           hip_ratio = Math.round(hip_ratio * 100); // switch to percentage
           literate_ratio = Math.round(literate_ratio * 100); // switch to percentage
+          var pop_ratio;
+          if (name_popularity && name_popularity[name]) {pop_ratio = Math.round(name_popularity[name] * 100);}
+          else {pop_ratio=0;}
           td[async_lookup[name]].html('<div class="progress">'+
             '<div class="progress-bar progress-bar-success" style="width: '+literate_ratio+'%;"></div>'+
             '<div class="progress-bar progress-bar-warning" style="width: '+hip_ratio+'%;"></div>'+
+            '<div class="progress-bar progress-bar-info" style="width: '+pop_ratio+'%;"></div>'+
             '</div>');
           //td[async_lookup[name]].html(hip+', '+literate+', '+'<span style="color: black;">'+titles.join(", ")+'</span>');//', '+trendy+
         } else {
