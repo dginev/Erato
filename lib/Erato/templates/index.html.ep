@@ -85,6 +85,7 @@ div.rounded {
   // This testAPI() function is only called in those cases. 
   var reaper = 0;
   function retrieveMusic() {
+    if ($('table').length !== 0) {console.log('DONE.');return false;} // Only fetch once per login session
     $('#message').text('Welcome!  Fetching your information.... ');
     $("body").css("cursor","progress");
 
@@ -101,19 +102,21 @@ div.rounded {
       $("#message").addClass('loading');
       reaper = 0;
       $("body").css("cursor","progress");
-      retrieveScores(names,retrieveFriendOverlap(names));
+      var name_popularity = retrieveFriendOverlap(names);
+      retrieveScores(names,name_popularity);
     });
   };
 
   function retrieveFriendOverlap(names) {
     var name_popularity = {};
+    var friend_count = 1;
     $.each(names, function(index, name) { name_popularity[name]=0; });
     FB.api("me/friends",{
       fields:'id',
       limit:200
     },function(res){
       var l='';
-      var friend_count = res.data.length || 1;
+      friend_count = res.data.length || 1;
       $.each(res.data,function(idx,val){
          l=l+val.id+(idx<res.data.length-1?',':'')
       });
@@ -124,17 +127,24 @@ div.rounded {
           // We need to intersect each of our user's artists with this friends and bump the counter for the intersection:
           $.each(artists,function(aindex,artist) {
             if (artist in name_popularity) {
+              console.log(artist);
               name_popularity[artist]++; } });
         }});
         for ( key_name in name_popularity) {
-          name_popularity[key_name] /= friend_count;  }
+          name_popularity[key_name] /= friend_count;
+          // If we are late to the party, set the values from here:
+          var bar_td = $('tr td:contains("'+key_name+'")').next();
+          bar_td.find('div.progress-bar-info').attr('style','width:'+(name_popularity[key_name]*100)+'%;');
+          console.log(bar_td.html());
+        }
+        return name_popularity;
       });
     });
-    return name_popularity;  }
+  }
 
   function retrieveScores(names,name_popularity) {
     $("#message").text("Retrieving artist scores/facts...");
-    console.log(name_popularity);
+    console.log("Received: "+JSON.stringify(name_popularity));
     var td = [];
     var async_lookup = [];
     jQuery.each(names, function(index, name) {
