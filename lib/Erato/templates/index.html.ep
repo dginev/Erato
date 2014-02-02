@@ -80,7 +80,6 @@ tr.subrow {
   // Here we run a very simple test of the Graph API after login is successful. 
   // This testAPI() function is only called in those cases. 
   var reaper = 0;
-  var expected = 0;
   function retrieveMusic() {
     $('#message').text('Welcome!  Fetching your information.... ');
     $("body").css("cursor","progress");
@@ -97,7 +96,6 @@ tr.subrow {
       $('tr').each(function(trid) {$(this).attr('id',trid);});
       $("#message").addClass('loading');
       reaper = 0;
-      expected = names.length;
       $("body").css("cursor","progress");
       retrieveScores(names);
     });
@@ -109,10 +107,10 @@ tr.subrow {
     jQuery.each(names, function(index, name) {
       async_lookup[name] = index;
       td[async_lookup[name]] = $('table tr#'+(async_lookup[name]+1)+' td:nth-child(2)');
-      $.post("/analyze", {'name':name}).done(function(response) {
-        reaper += 1; // TODO: Sync this (why double the expected???)
+      $.post("/analyze", {'name':name, beforeSend:function(xhr){reaper++;}}).done(function(response) {
         var subtable = [];
-        if (reaper >= expected) {
+        reaper--;
+        if (reaper <= 0) {
           $('#message').removeClass('loading'); 
           $('#message').text('Completed.');
           $("body").css("cursor","auto"); }
@@ -137,8 +135,9 @@ tr.subrow {
                 score_count++;
             }}
           });
-          if (subtable.length > 0) {
-            var subtabulated = subtable.map(function(strow){return "<td>"+strow.title+'</td><td>'+strow.terms+'</td>'});
+          var termed_subtable = $.grep(subtable,function(strow,index) {return (strow.terms && (strow.terms.length>0)); } );
+          if (termed_subtable.length > 0) {
+            var subtabulated = termed_subtable.map(function(strow){return "<td>"+strow.title+'</td><td>'+strow.terms+'</td>'});
             td[async_lookup[name]].parent().after("<tr class='subrow'>"+subtabulated.join("</tr><tr class='subrow'>")+"</tr>");
           }
 
