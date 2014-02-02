@@ -12,9 +12,13 @@
 <script src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <style>
+@import 'bootstrap.less';
 tr.subrow {
   text-align: right;
   font-style: italic;
+}
+div.rounded {
+    .border-radius( 15px );
 }
 </style>
 </head>
@@ -159,8 +163,15 @@ tr.subrow {
 </script>
 
 <div class="row">
-        <div class="col-md-2"><p id="message"></p></div>
-        <div class="col-md-7"><div class="focus"><img height="150px" src="img/Erato-wikipedia.jpg"></div></div>
+        <div class="col-md-1"><p id="message"></p></div>
+        <div class="col-md-8 focus">
+          <div class="row-fluid">
+            <div class="col-md-6 height6"><img class="img-rounded" style="border-radius:25px;" src="img/Erato-wikipedia.jpg"></div>
+            <div class="col-md-5 height6" style="vertical-aligh: middle; text-align:left;"><span style="font-family:'New Century Schoolbook'; font-size:100px;">Erato</span><br>
+                 <span style="font-family:'New Century Schoolbook'; font-size:30px; font-style:italic;">Discover Poetry in Music</span>
+            </div>
+          </div>
+        </div>
         <div class="col-md-3"><div class="fb-login-button" data-max-rows="1" data-size="xlarge" data-show-faces="false" data-auto-logout-link="true"></div></div>
 </div>
 
