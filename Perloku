@@ -1,2 +1,2 @@
 #!/bin/sh
-./script/erato.pl daemon -l http://*:$PORT -m production
+./script/erato.pl prefork -l http://*:$PORT -m production -c 15 -G 60
