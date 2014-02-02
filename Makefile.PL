@@ -10,6 +10,7 @@ PREREQ_PM => {
   'JSON::XS'=>0,
   'List::MoreUtils'=>0,
   'Lyrics::Fetcher::LyricWiki'=>0,
+  'Lyrics::Fetcher::Cache'=>0,
   'Net::LastFMAPI'=>0,
   'File::Slurp'=>0,
   'File::Spec'=>0
