@@ -31,8 +31,8 @@ sub get_top_tracks {
 sub compute_score {
   my ($artist,$song) = @_;
   $artist =~ s/Official Fan Page$//;
-  my $lyrics = Lyrics::Fetcher->fetch($artist,$song,'LyricWiki') ||
-               Lyrics::Fetcher->fetch($artist,$song,'AZLyrics');
+  my $lyrics = Lyrics::Fetcher->fetch($artist,$song,'LyricWiki');
+               #|| Lyrics::Fetcher->fetch($artist,$song,'AZLyrics');
   return unless length($lyrics);
   # We got the lyrics compute the scores:
   my $scores={};
