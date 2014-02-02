@@ -117,27 +117,33 @@ tr.subrow {
           $('#message').text('Completed.');
           $("body").css("cursor","auto"); }
         if (response.length > 0) {
+          var score_count = 0;
+          console.log(JSON.stringify(response));
           var hip_ratio = 0;
           var literate_ratio = 0;
           var trendy_ratio = 0;
           jQuery.each(response, function(songindex, score) {
             var subrow = {};
-            if (! score.song) {return false;} // Skip empty scores (garbage?)
-            subrow.title = score.song;
-            if (score.terms && (score.terms.length > 0)) {
-              subrow.terms = score.terms.join('<span style="color: red">; </span>');  }
-            else {
-              subrow.terms = '';  }
-            subtable.push(subrow);
-            hip_ratio += score.hipsterness;
-            literate_ratio += score.literacy;
+            if (score.song) { // skip empty songs
+              subrow.title = score.song;
+              if (score.terms && (score.terms.length > 0)) {
+                subrow.terms = score.terms.join('<span style="color: red">; </span>');  }
+              else {
+                subrow.terms = '';  }
+              subtable.push(subrow);
+              if (score.hipsterness && score.literacy) {
+                hip_ratio += score.hipsterness;
+                literate_ratio += score.literacy;
+                score_count++;
+            }}
           });
           if (subtable.length > 0) {
             var subtabulated = subtable.map(function(strow){return "<td>"+strow.title+'</td><td>'+strow.terms+'</td>'});
             td[async_lookup[name]].parent().after("<tr class='subrow'>"+subtabulated.join("</tr><tr class='subrow'>")+"</tr>");
           }
-          hip_ratio /= response.length; // arithmetic mean
-          literate_ratio /= response.length;// arithmetic mean
+
+          hip_ratio /= score_count; // arithmetic mean
+          literate_ratio /= score_count;// arithmetic mean
           hip_ratio = Math.round(hip_ratio * 100); // switch to percentage
           literate_ratio = Math.round(literate_ratio * 100); // switch to percentage
           td[async_lookup[name]].html('<div class="progress">'+
