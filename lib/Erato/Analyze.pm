@@ -21,6 +21,7 @@ lastfm_config(
 
 sub get_top_tracks {
   my ($artist) = @_;
+  $artist =~ s/Official Fan Page$//;
   # Grab all songs of this artist via LastFM's API:
   my $top_tracks = lastfm("artist.getTopTracks", artist => $artist);
   return unless ref $top_tracks;
