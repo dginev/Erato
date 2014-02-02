@@ -1,5 +1,8 @@
 Erato is the ancient greek muse of love and poetry.
 
+Now deployed at Heroku:
+http://rocky-dawn-1699.herokuapp.com/
+
 Action Plan
 ====
 
